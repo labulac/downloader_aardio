@@ -18,8 +18,8 @@ winform.static.text='下载器v'+tostring(productversion)
 winform.lnkVersion.disabledText = {'\uF254';'\uF251';'\uF252';'\uF253';'\uF250'}
 if( fsys.update.simpleMain(
 	"downloader",
-	"https://ghproxy.com/https://raw.githubusercontent.com/labulac/downloader_arrdio/main/update-files/version.txt",
-	..io.appData("/labulac/downloader/app/update"),
+	"https://ghproxy.com/https://raw.githubusercontent.com/labulac/downloader_aardio/main/update-files/version.txt",
+	 ..io.appData("/labulac/downloader/app/update"),
 	function(version,description,status){})){
 	return 0;	
 }
