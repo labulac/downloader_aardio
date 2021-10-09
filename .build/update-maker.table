@@ -1,0 +1,6 @@
+{
+updateUrl="https://ghproxy.com/https://raw.githubusercontent.com/labulac/downloader_arrdio/main/update-files/";
+singleFile=1;
+description="test";
+outputDir="/update-files/"
+}

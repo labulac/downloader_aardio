@@ -1,0 +1,8 @@
+{
+    "description":"test",
+    "format":".lzma",
+    "main":"\\downloader_aardio.exe",
+    "updater":"\\downloader_aardio.exe",
+    "url":"https://ghproxy.com/https://raw.githubusercontent.com/labulac/downloader_arrdio/main/update-files/",
+    "version":"0.0.0.01"
+}

@@ -1,0 +1,121 @@
+import win.ui;
+import fsys.update.simpleMain;
+import fsys;
+/*DSG{{*/
+var winform = win.form(text="下载器";right=759;bottom=135)
+winform.add(
+btnSend={cls="button";text="下载";left=600;top=48;right=744;bottom=88;db=1;dr=1;z=3};
+lnkVersion={cls="plus";text="正在检查新版本中...";left=0;top=96;right=352;bottom=127;align="left";color=8388608;db=1;dl=1;iconColor=2960685;iconStyle={align="left";font=LOGFONT(h=-16;name='FontAwesome')};iconText='\uF021';notify=1;paddingLeft=20;z=4};
+static={cls="static";text="下载器";left=272;top=16;right=496;bottom=48;align="center";dl=1;dr=1;dt=1;font=LOGFONT(h=-19);notify=1;transparent=1;z=1};
+txtData={cls="edit";left=24;top=48;right=577;bottom=87;db=1;dl=1;dr=1;edge=1;multiline=1;z=2};
+txtMessage={cls="edit";left=432;top=96;right=744;bottom=120;disabled=1;edge=1;readonly=1;z=5}
+)
+/*}}*/
+
+productversion = fsys.version.getInfo(io._exepath).productVersion
+winform.static.text='下载器v'+tostring(productversion)
+
+winform.lnkVersion.disabledText = {'\uF254';'\uF251';'\uF252';'\uF253';'\uF250'}
+if( fsys.update.simpleMain(
+	"downloader",
+	"https://ghproxy.com/https://raw.githubusercontent.com/labulac/downloader_arrdio/main/update-files/version.txt",
+	..io.appData("/labulac/downloader/app/update"),
+	function(version,description,status){})){
+	return 0;	
+}
+import win.ui.tooltip;
+var tooltipCtrl = win.ui.tooltip( winform );
+tooltipCtrl.addTool(winform.lnkVersion,"点击检测更新" );
+
+fsys.update.simpleMain.onStatusChanged(function(version,description,status){
+	/*注意此回调可捕获到调用前或调用后的更新状态变更*/
+	if(status=="ready"){
+		winform.lnkVersion.disabledText = null;	
+		winform.lnkVersion.text = "点这里重新启动软件更新到新版本:"+version
+		tooltipCtrl.addTool(winform.lnkVersion,description);
+	}
+	elseif(status=="complete"){
+		winform.lnkVersion.text = "已更新到最新版本"+version ;
+		tooltipCtrl.addTool(winform.lnkVersion,description);
+		winform.lnkVersion.disabledText = null;
+	} 
+	elseif(status=="latest"){
+		winform.lnkVersion.disabledText = null;
+		winform.lnkVersion.text = "已经是最新版本";
+		
+	} 
+	elseif(status=="failed"){
+		winform.lnkVersion.disabledText = null;
+		winform.msgErr(description);
+	}
+})
+//38-70行，是自动更新代码，无需改动！！！
+
+winform.lnkVersion.skin(
+	background = { 
+		hover = "/res/images/btn-hover.png";
+		focus = "/res/images/btn-focus.jpg";
+		active = "/res/images/btn-active.png";
+		disabled = "/res/images/btn-disabled.png"; 
+	}
+)
+winform.lnkVersion.oncommand = function(id,event){
+	winform.lnkVersion.text = fsys.update.simpleMain.getReadyStatusInfo() ? "正在启动自动更新" : "正在检查新版本中...";
+	winform.lnkVersion.disabledText = {'\uF254';'\uF251';'\uF252';'\uF253';'\uF250'}
+	if(fsys.update.simpleMain.checkUpdate(true)){
+		win.quitMessage();
+	}
+}
+
+
+
+import process.aria2;
+var aria2 = process.aria2();
+aria2.downloadDir='/download'
+aria2.startServer("--max-connection-per-server=16")
+
+//获取JSON-RPC客户端
+var jsonClient = aria2.jsonClient();
+
+
+//显示错误信息
+jsonClient.on("error",function(err){
+    winform.txtMessage.print("出错了",err);
+});  
+
+//监听aria2事件
+jsonClient.on("aria2.onDownloadStart",function(param){
+   
+    winform.txtMessage.print("DownloadStart");
+})
+
+//调用aria2打开一个网页
+winform.btnSend.oncommand = function(id,event){
+   
+    jsonClient.aria2.addUri({winform.txtData.text}).end = function(result,err){
+        if(err)
+            winform.txtMessage.print("下载出错了",web.json.stringify(err))
+        else {
+            winform.txtMessage.print("成功添加任务",web.json.stringify(result))
+        }
+        
+    }
+}
+
+//启动就绪执行
+aria2.ready(
+    function(){
+        jsonClient.aria2.getGlobalOption().end = function(result,err){
+            //winform.txtMessage.print(result)
+        }
+    }
+)
+
+
+
+winform.onClose = function(hwnd,message,wParam,lParam){
+    jsonClient.aria2.shutdown();
+}
+
+winform.show();
+win.loopMessage();
